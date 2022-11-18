@@ -32,4 +32,5 @@ fibheap *fibheap_consolidate(fibheap *heap); //
 void fibheap_link(fibheap *heap, node *y, node *x);
 void fibheap_cut(fibheap *heap, node *x, node* y);
 void fibheap_cascading_cut(fibheap *heap, node *n);
+void fibheap_print(fibheap *heap, int level);
 int D(fibheap *heap);
