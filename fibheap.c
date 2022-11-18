@@ -3,8 +3,7 @@
 #include <string.h>
 #include <limits.h>
 
-fibheap *fibheap_allocate_memory()
-{
+fibheap *fibheap_allocate_memory() {
 	fibheap *h = malloc(sizeof(fibheap));
 	h->min = NULL;
 	h->count = 0;
@@ -69,8 +68,7 @@ fibheap *fibheap_union(fibheap *heap1, fibheap *heap2) {
     return heap;
 }
 
-void fibheap_link_lists(node *m1, node *m2)
-{
+void fibheap_link_lists(node *m1, node *m2) {
 	if (m1 == NULL || m2 == NULL) {
 		return;
     }
@@ -100,8 +98,7 @@ fibheap *fibheap_delete_min(fibheap *heap) {
     return z;
 }
 
-void fibheap_link(fibheap *heap, node *y, node *x)
-{
+void fibheap_link(fibheap *heap, node *y, node *x) {
 	x->degree++;
 	fibheap_remove_node_from_root_list(y, heap->min);
 	y->parent = x;
@@ -109,8 +106,7 @@ void fibheap_link(fibheap *heap, node *y, node *x)
 	y->mark = 0;
 }
 
-fibheap *fibheap_decrease_key(fibheap *heap, node *n, int new_key)
-{
+fibheap *fibheap_decrease_key(fibheap *heap, node *n, int new_key) {
 	node *parent = n->parent;
 	if (n->key < new_key) {
 		return;
@@ -153,8 +149,7 @@ void fibheap_cut(fibheap *heap, node *x, node *y) {
     x->mark = 0;
 }
 
-void fibheap_cascading_cut(fibheap *heap, node *n)
-{
+void fibheap_cascading_cut(fibheap *heap, node *n) {
 	if (n->parent == NULL) {
 		return;
     }
@@ -163,6 +158,15 @@ void fibheap_cascading_cut(fibheap *heap, node *n)
 	} else {
 		fibheap_cut(heap, n, n->parent);
 		fibheap_cascading_cut(heap, n->parent);
+	}
+}
+
+void fibheap_print(fibheap *heap, int level) {
+    node *n = heap->min->left;
+	printf("%d\n", heap->min->key);
+	while (n != heap->min) {
+		printf("%d\n", n->key);
+		n = n->left;
 	}
 }
 
