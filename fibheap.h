@@ -3,7 +3,7 @@
 typedef struct node {
     struct node *parent;
     int key;
-	int value;
+	char *value;
 	int mark;
     int degree;
 	struct node *left;
@@ -32,5 +32,5 @@ fibheap *fibheap_consolidate(fibheap *heap); //
 void fibheap_link(fibheap *heap, node *y, node *x);
 void fibheap_cut(fibheap *heap, node *x, node* y);
 void fibheap_cascading_cut(fibheap *heap, node *n);
-void fibheap_print(fibheap *heap, int level);
+void fibheap_print(fibheap *heap);
 int D(fibheap *heap);
