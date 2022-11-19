@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <math.h>
+#include <stdio.h>
 
 fibheap *fibheap_allocate_memory() {
 	fibheap *h = malloc(sizeof(fibheap));
@@ -59,7 +61,7 @@ fibheap *fibheap_union(fibheap *heap1, fibheap *heap2) {
     fibheap *heap = fibheap_allocate_memory();
     heap->min = heap1->min;
     fibheap_link_lists(heap1->min, heap2->min);
-    if((heap1->min == NULL) || ((heap2->min != NULL) && (strcmp(heap2->min->key, heap->min->key) < 0))) {
+    if((heap1->min == NULL) || ((heap2->min != NULL) && (heap2->min->key < heap->min->key))) {
         heap->min = heap2->min;
     }
     heap->count = heap1->count + heap2->count;
@@ -84,10 +86,10 @@ fibheap *fibheap_delete_min(fibheap *heap) {
         return NULL;
     }
     for (node *x = z->child; x != NULL; x = x->child) {
-        FibHeapAddNodeToRootList(x, heap); /* Добавляем дочерний узел x в список корней */
+        fibheap_add_node_to_root_list(x, heap->min); /* Добавляем дочерний узел x в список корней */
         x->parent = NULL;
     }
-    fibheap_remove_node_from_root_list(z, heap); /* Удаляем z из списка корней */
+    fibheap_remove_node_from_root_list(z, heap->min); /* Удаляем z из списка корней */
     if (z == z->right) {
         heap->min = NULL;
     } else {
@@ -95,7 +97,7 @@ fibheap *fibheap_delete_min(fibheap *heap) {
         fibheap_consolidate(heap);
     }
     heap->count--;
-    return z;
+    return heap;
 }
 
 void fibheap_link(fibheap *heap, node *y, node *x) {
@@ -109,7 +111,7 @@ void fibheap_link(fibheap *heap, node *y, node *x) {
 fibheap *fibheap_decrease_key(fibheap *heap, node *n, int new_key) {
 	node *parent = n->parent;
 	if (n->key < new_key) {
-		return;
+		return heap;
     }
 	n->key = new_key;
 	if (parent != NULL && parent->key > n->key) {
@@ -119,11 +121,13 @@ fibheap *fibheap_decrease_key(fibheap *heap, node *n, int new_key) {
 	if (heap->min == NULL || n->key < heap->min->key) {
 		heap->min = n;
 	}
+	return heap;
 }
 
 fibheap *fibheap_delete(fibheap *heap, node *x) {
     fibheap_decrease_key(heap, x, -INT_MAX);
     fibheap_delete_min(heap);
+	return heap;
 }
 
 void fibheap_remove_node_from_root_list(node *x, node *y) {
@@ -161,7 +165,7 @@ void fibheap_cascading_cut(fibheap *heap, node *n) {
 	}
 }
 
-void fibheap_print(fibheap *heap, int level) {
+void fibheap_print(fibheap *heap) {
     node *n = heap->min->left;
 	printf("%d\n", heap->min->key);
 	while (n != heap->min) {
@@ -171,5 +175,5 @@ void fibheap_print(fibheap *heap, int level) {
 }
 
 int D(fibheap* heap) {
-    return floor(log(2, heap->count));
+    return floor(log(heap->count));
 }
