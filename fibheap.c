@@ -141,55 +141,55 @@ void fibheap_remove_node_from_root_list(node *x, node *y) {
 }
 
 fibheap *fibheap_consolidate(fibheap *heap) {
-	int degree = D(heap), n = 0;
-	node** arr_node = malloc(sizeof(node) * degree);
-	node* node = NULL;
+	int degree = D(heap), count = 0;
+	node** arr_n = malloc(sizeof(node) * degree);
+	node* n = NULL;
 	for (int i = 0; i <= degree; i++) {
-		arr_node[i] = NULL;
+		arr_n[i] = NULL;
 	}
-	while (node != heap->min) {
-		if (node == NULL)
-			node = heap->min;
-		n++;
-		node = node->right;
+	while (n != heap->min) {
+		if (n == NULL)
+			n = heap->min;
+		count++;
+		n = n->right;
 	}
-	for (int i = 0; i < n; i++) {
-		int n_degree = node->degree;
-		while (arr_node[n_degree] != NULL) {
-			if (arr_node[n_degree]->key < node->key) {
-				if (arr_node[n_degree]->child != NULL) {
-					fibheapLink(arr_node[n_degree], node);
+	for (int i = 0; i < count; i++) {
+		int n_degree = n->degree;
+		while (arr_n[n_degree] != NULL) {
+			if (arr_n[n_degree]->key < n->key) {
+				if (arr_n[n_degree]->child != NULL) {
+					fibheap_link(heap, arr_n[n_degree], n);
 				} else {
-					arr_node[n_degree]->child = node;
-					fibHeapRemoveNodeFromRootList(node);
-					node->left = node;
-					node->right = node;
-					arr_node[n_degree]->degree++;
-					node->parent = arr_node[n_degree];
+					arr_n[n_degree]->child = n;
+					fibheap_remove_node_from_root_list(n, heap->min);
+					n->left = n;
+					n->right = n;
+					arr_n[n_degree]->degree++;
+					n->parent = arr_n[n_degree];
 				}
-				node = arr_node[n_degree];
+				n = arr_n[n_degree];
 			} else {
-				if (node->child != NULL) {
-					fibheapLink(node, arr_node[n_degree]);
+				if (n->child != NULL) {
+					fibheap_link(heap, n, arr_n[n_degree]);
 				} else {
-					node->child = arr_node[n_degree];
-					fibHeapRemoveNodeFromRootList(arr_node[n_degree]);
-					arr_node[n_degree]->left = arr_node[n_degree];
-					arr_node[n_degree]->right = arr_node[n_degree];
-					node->degree++;
-					arr_node[n_degree]->parent = node;
+					n->child = arr_n[n_degree];
+					fibheap_remove_node_from_root_list(arr_n[n_degree], heap->min);
+					arr_n[n_degree]->left = arr_n[n_degree];
+					arr_n[n_degree]->right = arr_n[n_degree];
+					n->degree++;
+					arr_n[n_degree]->parent = n;
 				}
 			}
-			arr_node[n_degree] = NULL;
+			arr_n[n_degree] = NULL;
 			n_degree++;
 		}	
-		arr_node[n_degree] = node;
-		node = node->right;
+		arr_n[n_degree] = n;
+		n = n->right;
 	}
 	for (int i = 0; i <= degree; i++) {
-		if (arr_node[i] != NULL) {
-			if (heap->min == NULL || heap->min->key > arr_node[i]->key) {
-				heap->min = arr_node[i];
+		if (arr_n[i] != NULL) {
+			if (heap->min == NULL || heap->min->key > arr_n[i]->key) {
+				heap->min = arr_n[i];
 			}
 		}
 	}
