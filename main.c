@@ -1,4 +1,5 @@
 #include "fibheap.h"
+#include <stdio.h>
 
 int main() {
     fibheap *h1 = fibheap_allocate_memory();
@@ -19,5 +20,11 @@ int main() {
 
     fibheap *h3 = fibheap_union(h1, h2);
     fibheap_print(h3);
+
+    node *min = fibheap_min(h3);
+    printf("Value of minimal: '%s'\n", min->value);
+    fibheap_delete_min(h3);
+    min = fibheap_min(h3);
+    printf("New minimal is '%s'\n", min->value);
     return 0;
 }
