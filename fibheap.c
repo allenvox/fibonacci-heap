@@ -218,9 +218,9 @@ void fibheap_cascading_cut(fibheap *heap, node *n) {
 
 void fibheap_print(fibheap *heap) {
     node *n = heap->min->left;
-	printf("%d\n", heap->min->key);
+	printf("[%d]-[%s]\n", heap->min->key, heap->min->value);
 	while (n != heap->min) {
-		printf("%d\n", n->key);
+		printf("[%d]-[%s]\n", n->key, n->value);
 		n = n->left;
 	}
 }
