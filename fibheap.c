@@ -62,7 +62,7 @@ fibheap *fibheap_union(fibheap *heap1, fibheap *heap2) {
     heap->min = heap1->min;
     fibheap_link_lists(heap1->min, heap2->min);
     if((heap1->min == NULL) || ((heap2->min != NULL) && (heap2->min->key < heap->min->key))) {
-        heap->min = heap2->min;
+        heap->min = heap2->min; // if minimal of 2nd heap is less - put it as new min for unified heap
     }
     heap->count = heap1->count + heap2->count;
     free(heap1);
@@ -216,13 +216,31 @@ void fibheap_cascading_cut(fibheap *heap, node *n) {
 	}
 }
 
-void fibheap_print(fibheap *heap) {
-    node *n = heap->min->left;
-	printf("[%d]-[%s]\n", heap->min->key, heap->min->value);
+void fibheap_print(node *root) {
+	if (root == NULL) return;
+    node *n = root, *child;
+	while(1) {
+		printf("%d:", n->key);
+		child = n->child;
+		if(child == NULL) {
+			printf(" -");
+		}
+		while(child != NULL) {
+			printf(" %d", child->key);
+			child = child->right;
+			if(child == n->child) { break; }
+		}
+		printf("\n");
+		fibheap_print(child);
+		n = n->right;
+		if(root == n) { break; }
+	}
+	
+	/*printf("[%d]-[%s]\n", heap->min->key, heap->min->value);
 	while (n != heap->min) {
 		printf("[%d]-[%s]\n", n->key, n->value);
 		n = n->left;
-	}
+	}*/
 }
 
 int D(fibheap* heap) {
