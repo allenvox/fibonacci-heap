@@ -5,15 +5,15 @@
 #include <math.h>
 #include <stdio.h>
 
-fibheap *fibheap_allocate_memory() {
+fibheap *fibheap_allocate_memory() { //
 	fibheap *h = malloc(sizeof(fibheap));
 	h->min = NULL;
 	h->count = 0;
 	return h;	
 }
 
-fibheap *fibheap_insert(fibheap *heap, int key, char *value) {
-    node *n = malloc(sizeof(node));
+node *fibheap_create_node(int key, char *value) { //
+	node *n = malloc(sizeof(node));
 	n->parent = NULL;
 	n->left = n;
 	n->right = n;
@@ -22,6 +22,11 @@ fibheap *fibheap_insert(fibheap *heap, int key, char *value) {
 	n->degree = 0;
 	n->value = value;
 	n->mark = 0; // 0 - false, 1 - true
+	return n;
+}
+
+fibheap *fibheap_insert(fibheap *heap, int key, char *value) { //
+    node *n = fibheap_create_node(key, value);
 	fibheap_add_node_to_root_list(n, heap->min);
 	if (heap->min == NULL || n->key < heap->min->key) {
 		heap->min = n;
@@ -31,23 +36,20 @@ fibheap *fibheap_insert(fibheap *heap, int key, char *value) {
 }
 
 void fibheap_add_node_to_root_list(node *n, node *min) {
-    if (min == NULL) {
-		return;
-    }
-	if (min->left == min) {
-		min->left = n;
-		min->right = n;
-		n->right = min;
-		n->left = min;
+    if (!min) {
+    	min = n;
+    	n->left = n;
+    	n->right = n;
 	} else {
-		n->left = min->left;
-		n->left->right = n;
-		min->left = n;
-		n->right = min;
-	}
+    	n->left = min->left;
+    	n->right = min;
+    	min->left->right = n;
+    	min->left = n;
+  	}
+  	n->parent = NULL;
 }
 
-node *fibheap_min(fibheap *heap) {
+node *fibheap_min(fibheap *heap) { //
     return heap->min;
 }
 
@@ -70,42 +72,64 @@ fibheap *fibheap_union(fibheap *heap1, fibheap *heap2) {
     return heap;
 }
 
-void fibheap_link_lists(node *m1, node *m2) {
-	if (m1 == NULL || m2 == NULL) {
+void fibheap_link_lists(node *n1, node *n2) { //
+	if (n1 == NULL || n2 == NULL) {
 		return;
     }
-	m1->right->left = m2->left;
-	m2->left->right = m1->right;
-	m1->right = m2;
-	m2->left = m1;
+	node *l1 = n1->left, *l2 = n2->left;
+	l1->right = n2, l2->right = n1;
+	n1->left = l2;
+	n2->left = l1;
 }
 
 fibheap *fibheap_delete_min(fibheap *heap) {
-    node *z = heap->min;
-    if (z == NULL) {
+	node *min = heap->min;
+    if (min == NULL) {
         return NULL;
     }
-    for (node *x = z->child; x != NULL; x = x->child) {
-        fibheap_add_node_to_root_list(x, heap->min); /* Добавляем дочерний узел x в список корней */
-        x->parent = NULL;
-    }
-    fibheap_remove_node_from_root_list(z, heap->min); /* Удаляем z из списка корней */
-    if (z == z->right) {
-        heap->min = NULL;
-    } else {
-        heap->min = z->right;
-        fibheap_consolidate(heap);
-    }
+	node *child = min->child;
+	while (child) {
+		fibheap_add_node_to_root_list(child, heap->min);
+		child->parent = NULL;
+		if (child->left == child) { break; }
+		child = child->left;
+	}
+	fibheap_link_lists(min, min->child);
+	fibheap_remove_node_from_root_list(min);
+	if (min == min->right) {
+		heap->min = NULL;
+	} else {
+		heap->min = min->right;
+		fibheap_consolidate(heap);
+	}
     heap->count--;
+	free(min);
     return heap;
 }
 
-void fibheap_link(fibheap *heap, node *y, node *x) {
-	x->degree++;
-	fibheap_remove_node_from_root_list(y, heap->min);
-	y->parent = x;
-	fibheap_add_node_to_root_list(y, x->child);
-	y->mark = 0;
+void fibheap_insert_child(node *parent, node *child) {
+	if (!parent || !child) { return; }
+	if (!parent->child) {
+    	parent->child = child;
+    	child->left = child;
+    	child->right = child;
+  	} else {
+    	child->left = parent->child->left;
+    	child->right = parent->child;
+		parent->child->left->right = child;
+    	parent->child->left = child;
+  	}
+	child->parent = parent;
+}
+
+void fibheap_link(node *parent, node *child) {
+	if(parent == NULL || child == NULL) {
+		return;
+	}
+	parent->degree++;
+	fibheap_remove_node_from_root_list(child);
+	fibheap_insert_child(parent, child);
+	child->mark = 0;
 }
 
 fibheap *fibheap_decrease_key(fibheap *heap, node *n, int new_key) {
@@ -124,87 +148,77 @@ fibheap *fibheap_decrease_key(fibheap *heap, node *n, int new_key) {
 	return heap;
 }
 
-fibheap *fibheap_delete(fibheap *heap, node *x) {
+fibheap *fibheap_delete(fibheap *heap, node *x) { //
     fibheap_decrease_key(heap, x, -INT_MAX);
     fibheap_delete_min(heap);
 	return heap;
 }
 
-void fibheap_remove_node_from_root_list(node *x, node *y) {
-    if (x == y->child && x != x->right) {
-		y->child = x->right;
-	} else {
-		y->child = NULL;
-	}
-    x->right->left = x->left;
-	x->left->right = x->right;
+void fibheap_remove_node_from_root_list(node *n) { //
+	n->right->left = n->left;
+	n->left->right = n->right;
 }
 
 fibheap *fibheap_consolidate(fibheap *heap) {
-	int degree = D(heap), count = 0;
-	node** arr_n = malloc(sizeof(node) * degree);
-	node* n = NULL;
-	for (int i = 0; i <= degree; i++) {
-		arr_n[i] = NULL;
+	int max_degree = D(heap);
+	node** A = malloc(sizeof(node) * max_degree);
+	for (int i = 0; i < max_degree; i++) {
+		A[i] = NULL;
 	}
-	while (n != heap->min) {
-		if (n == NULL)
-			n = heap->min;
-		count++;
-		n = n->right;
-	}
-	for (int i = 0; i < count; i++) {
-		int n_degree = n->degree;
-		while (arr_n[n_degree] != NULL) {
-			if (arr_n[n_degree]->key < n->key) {
-				if (arr_n[n_degree]->child != NULL) {
-					fibheap_link(heap, arr_n[n_degree], n);
-				} else {
-					arr_n[n_degree]->child = n;
-					fibheap_remove_node_from_root_list(n, heap->min);
-					n->left = n;
-					n->right = n;
-					arr_n[n_degree]->degree++;
-					n->parent = arr_n[n_degree];
-				}
-				n = arr_n[n_degree];
-			} else {
-				if (n->child != NULL) {
-					fibheap_link(heap, n, arr_n[n_degree]);
-				} else {
-					n->child = arr_n[n_degree];
-					fibheap_remove_node_from_root_list(arr_n[n_degree], heap->min);
-					arr_n[n_degree]->left = arr_n[n_degree];
-					arr_n[n_degree]->right = arr_n[n_degree];
-					n->degree++;
-					arr_n[n_degree]->parent = n;
-				}
+	node *x = NULL;
+	while (1) {
+		if (x == NULL) {
+			x = heap->min;
+		}
+		int d = x->degree;
+		while(A[d] != NULL) {
+			node *y = A[d];
+			if(x == y) { break; }
+			if(x->key > y->key) {
+				node *temp = x;
+        		x = y;
+        		y = temp;
 			}
-			arr_n[n_degree] = NULL;
-			n_degree++;
-		}	
-		arr_n[n_degree] = n;
-		n = n->right;
+			fibheap_link(x, y);
+			A[d] = NULL;
+			d++;
+			heap->min = x;
+		}
+		A[d] = x;
+		x = x->right;
+		if(x == heap->min) { break; }
 	}
-	for (int i = 0; i <= degree; i++) {
-		if (arr_n[i] != NULL) {
-			if (heap->min == NULL || heap->min->key > arr_n[i]->key) {
-				heap->min = arr_n[i];
+	
+	for(int i = 0; i < max_degree; i++) {
+		if(A[i] != NULL) {
+			fibheap_add_node_to_root_list(A[i], heap->min);
+			printf("%d\n", heap->min->key);
+			if(A[i]->key < heap->min->key) {
+				heap->min = A[i];
 			}
 		}
 	}
     return heap;
 }
 
-void fibheap_cut(fibheap *heap, node *x, node *y) {
-    fibheap_remove_node_from_root_list(x, y);
-    y->degree--;
-    fibheap_add_node_to_root_list(x, heap->min);
-    x->parent = NULL;
+void fibheap_cut(fibheap *heap, node *x, node *y) { //
+	if (x == y->child && x != x->right) {
+		y->child = x->right;
+	} else {
+		y->child = NULL;
+	}
+	x->left->right = x->right;
+	x->right->left = x->left;
+	x->right = heap->min;
+	x->left = heap->min->left;
+	heap->min->left->right = x;
+	heap->min->left = x;
+	x->parent = NULL;
+	y->degree--;
     x->mark = 0;
 }
 
-void fibheap_cascading_cut(fibheap *heap, node *n) {
+void fibheap_cascading_cut(fibheap *heap, node *n) { //
 	if (n->parent == NULL) {
 		return;
     }
@@ -216,16 +230,16 @@ void fibheap_cascading_cut(fibheap *heap, node *n) {
 	}
 }
 
-void fibheap_print(node *root) {
+void fibheap_print(node *root) { //
 	if (root == NULL) return;
     node *n = root, *child;
 	while(1) {
 		printf("%d:", n->key);
 		child = n->child;
 		if(child == NULL) {
-			printf(" -");
+			printf(" no child");
 		}
-		while(child != NULL) {
+		while(child) {
 			printf(" %d", child->key);
 			child = child->right;
 			if(child == n->child) { break; }
@@ -233,16 +247,10 @@ void fibheap_print(node *root) {
 		printf("\n");
 		fibheap_print(child);
 		n = n->right;
-		if(root == n) { break; }
+		if(n == root) { break; }
 	}
-	
-	/*printf("[%d]-[%s]\n", heap->min->key, heap->min->value);
-	while (n != heap->min) {
-		printf("[%d]-[%s]\n", n->key, n->value);
-		n = n->left;
-	}*/
 }
 
-int D(fibheap* heap) {
-    return floor(log(heap->count));
+int D(fibheap* heap) { //
+    return floor(log(heap->count)) + 1;
 }
