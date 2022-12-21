@@ -29,9 +29,9 @@ int main() {
 
     node *min = fibheap_min(h3);
     printf("Minimal: %d - '%s'\n", min->key, min->value);
-    fibheap_delete_min(h3);
-    min = fibheap_min(h3);
-    printf("New minimal: %d - '%s'\n", min->key, min->value);
+    //fibheap_delete_min(h3);
+    //min = fibheap_min(h3);
+    //printf("New minimal: %d - '%s'\n", min->key, min->value);
     fibheap_print(min);
     return 0;
 }
