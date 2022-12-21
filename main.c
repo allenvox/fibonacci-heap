@@ -28,10 +28,10 @@ int main() {
     printf("\n");
 
     node *min = fibheap_min(h3);
-    printf("Value of minimal: '%s'\n", min->value);
+    printf("Minimal: %d - '%s'\n", min->key, min->value);
     fibheap_delete_min(h3);
     min = fibheap_min(h3);
-    printf("New minimal: '%s'\n", min->value);
+    printf("New minimal: %d - '%s'\n", min->key, min->value);
     fibheap_print(min);
     return 0;
 }
