@@ -36,17 +36,22 @@ fibheap *fibheap_insert(fibheap *heap, int key, char *value) { //
 }
 
 void fibheap_add_node_to_root_list(node *n, node *min) {
-    if (!min) {
-    	min = n;
+    if (min == NULL) {
+		min = n;
     	n->left = n;
     	n->right = n;
+	}
+	if (min->left == min) {
+		min->left = n;
+		min->right = n;
+		n->right = min;
+		n->left = min;
 	} else {
-    	n->left = min->left;
-    	n->right = min;
-    	min->left->right = n;
-    	min->left = n;
-  	}
-  	n->parent = NULL;
+		n->left = min->left;
+		n->left->right = n;
+		min->left = n;
+		n->right = min;
+	}
 }
 
 node *fibheap_min(fibheap *heap) { //
@@ -107,28 +112,11 @@ fibheap *fibheap_delete_min(fibheap *heap) {
     return heap;
 }
 
-void fibheap_insert_child(node *parent, node *child) {
-	if (!parent || !child) { return; }
-	if (!parent->child) {
-    	parent->child = child;
-    	child->left = child;
-    	child->right = child;
-  	} else {
-    	child->left = parent->child->left;
-    	child->right = parent->child;
-		parent->child->left->right = child;
-    	parent->child->left = child;
-  	}
-	child->parent = parent;
-}
-
-void fibheap_link(node *parent, node *child) {
-	if(parent == NULL || child == NULL) {
-		return;
-	}
-	parent->degree++;
+void fibheap_link(node *n, node *child) {
+	n->degree++;
 	fibheap_remove_node_from_root_list(child);
-	fibheap_insert_child(parent, child);
+	child->parent = n;
+	fibheap_add_node_to_root_list(child, n->child);
 	child->mark = 0;
 }
 
@@ -165,34 +153,31 @@ fibheap *fibheap_consolidate(fibheap *heap) {
 	for (int i = 0; i < max_degree; i++) {
 		A[i] = NULL;
 	}
-	node *x = NULL;
+	node *x = heap->min, *y, *temp;
+	int degree;
 	while (1) {
-		if (x == NULL) {
-			x = heap->min;
-		}
-		int d = x->degree;
-		while(A[d] != NULL) {
-			node *y = A[d];
+		degree = x->degree;
+		while(A[degree]) {
+			y = A[degree];
 			if(x == y) { break; }
 			if(x->key > y->key) {
-				node *temp = x;
+				temp = x;
         		x = y;
         		y = temp;
 			}
 			fibheap_link(x, y);
-			A[d] = NULL;
-			d++;
+			A[degree] = NULL;
+			degree++;
 			heap->min = x;
 		}
-		A[d] = x;
+		A[degree] = x;
 		x = x->right;
 		if(x == heap->min) { break; }
 	}
-	
+	heap->min = NULL;
 	for(int i = 0; i < max_degree; i++) {
 		if(A[i] != NULL) {
 			fibheap_add_node_to_root_list(A[i], heap->min);
-			printf("%d\n", heap->min->key);
 			if(A[i]->key < heap->min->key) {
 				heap->min = A[i];
 			}
@@ -252,5 +237,5 @@ void fibheap_print(node *root) { //
 }
 
 int D(fibheap* heap) { //
-    return floor(log(heap->count)) + 1;
+    return ceil(log(heap->count));
 }
